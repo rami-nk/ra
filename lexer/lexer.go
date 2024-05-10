@@ -2,12 +2,11 @@ package lexer
 
 import "ra/token"
 
-
 type Lexer struct {
-	input		string
-	position	int	// current position in input (points to current char)
-	readPosition	int	// current reading position in input (after current char)
-	ch		byte	// current char under examination
+	input        string
+	position     int  // current position in input (points to current char)
+	readPosition int  // current reading position in input (after current char)
+	ch           byte // current char under examination
 }
 
 func New(input string) *Lexer {
@@ -34,6 +33,18 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
+	case '!':
+		tok = newToken(token.BANG, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
 	case '(':
 		tok = newToken(token.LPAREN, l.ch)
 	case ')':
@@ -63,7 +74,7 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
-	    }
+	}
 
 	l.readChar()
 	return tok
