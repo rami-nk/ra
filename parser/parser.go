@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"ra/ast"
 	"ra/lexer"
 	"ra/token"
@@ -9,18 +10,27 @@ import (
 type Parser struct {
 	l *lexer.Lexer
 
+	errors []string
+
 	curToken  token.Token
 	peekToken token.Token
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) Errors() []string {
+	return p.errors
 }
 
 func (p *Parser) nextToken() {
@@ -66,6 +76,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	// TODO: We're skipping the expression until we encounter a semicolon
 	for !p.curTokenIs(token.SEMICOLON) {
+		p.peekError(token.SEMICOLON)
 		p.nextToken()
 	}
 
@@ -77,6 +88,7 @@ func (p *Parser) expectPeekTokenAndAdvance(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+		p.peekError(t)
 		return false
 	}
 }
@@ -87,4 +99,9 @@ func (p *Parser) curTokenIs(t token.TokenType) bool {
 
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
+}
+
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
 }
