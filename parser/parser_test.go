@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ra/ast"
 	"ra/lexer"
+	"strconv"
 	"testing"
 )
 
@@ -291,6 +292,61 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
+func TestBooleanParsing(t *testing.T) {
+	//input := "true;"
+	inputs := map[string]bool{
+		"true;":  true,
+		"false;": false,
+	}
+
+	for input, expected := range inputs {
+		l := lexer.New(input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program has not enough statements. got=%d",
+				len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		ident, ok := stmt.Expression.(*ast.Boolean)
+
+		if !ok {
+			t.Fatalf("exp not *ast.Identifier. got=%T", stmt.Expression)
+		}
+
+		testLiteralExpression(t, ident, expected)
+	}
+}
+
+func testBoolean(t *testing.T, exp ast.Expression, value bool) bool {
+	ident, ok := exp.(*ast.Boolean)
+	if !ok {
+		t.Errorf("exp not *ast.Boolean. got=%T", exp)
+		return false
+	}
+
+	if ident.Value != value {
+		t.Errorf("ident.Value not %t. got=%t", value, ident.Value)
+		return false
+	}
+
+	if ident.TokenLiteral() != strconv.FormatBool(value) {
+		t.Errorf("ident.TokenLiteral not %t. got=%s", value,
+			ident.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	ident, ok := exp.(*ast.Identifier)
 	if !ok {
@@ -370,6 +426,8 @@ func testLiteralExpression(
 		return testIntegerLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
+	case bool:
+		return testBoolean(t, exp, v)
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
