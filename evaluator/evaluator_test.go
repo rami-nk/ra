@@ -347,6 +347,12 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`first([])`, "null"},
 		{`first(1)`, "argument to `len` not supported. got=Integer, want=Array."},
 		{`first("String")`, "argument to `len` not supported. got=String, want=Array."},
+		{`last([1, 2, 3])`, 3},
+		{`last(["hallo", 2, 3])`, 3},
+		{`last(["hallo", 2, "welt"])`, "welt"},
+		{`last([])`, "null"},
+		{`last(1)`, "argument to `len` not supported. got=Integer, want=Array."},
+		{`last("String")`, "argument to `len` not supported. got=String, want=Array."},
 	}
 
 	for _, tt := range tests {
