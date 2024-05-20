@@ -340,8 +340,13 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len("")`, 0},
 		{`len("four")`, 4},
 		{`len("hello world")`, 11},
-		{`len(1)`, "argument to `len` not supported. got=Integer, want=String."},
+		{`len(1)`, "argument to `len` not supported. got=Integer, want={String or Array}."},
 		{`len("one", "two")`, "wrong number of arguments. got=2, want=1."},
+		{`first([1, 2, 3])`, 1},
+		{`first(["hallo", 2, 3])`, "hallo"},
+		{`first([])`, "null"},
+		{`first(1)`, "argument to `len` not supported. got=Integer, want=Array."},
+		{`first("String")`, "argument to `len` not supported. got=String, want=Array."},
 	}
 
 	for _, tt := range tests {
@@ -351,15 +356,25 @@ func TestBuiltinFunctions(t *testing.T) {
 		case int:
 			testIntegerObject(t, evaluated, int64(expected))
 		case string:
-			errObj, ok := evaluated.(*object.Error)
-			if !ok {
+			switch obj := evaluated.(type) {
+			case *object.Error:
+				if obj.Message != expected {
+					t.Errorf("wrong error message. expected=%q, got=%q",
+						expected, obj.Message)
+				}
+			case *object.String:
+				if obj.Value != expected {
+					t.Errorf("wrong string value. expected=%q, got=%q",
+						expected, obj.Value)
+				}
+			case *object.Null:
+				if obj.Inspect() != expected {
+					t.Errorf("not null returned.")
+				}
+			default:
 				t.Errorf("object is not Error. got=%T (%+v)",
 					evaluated, evaluated)
 				continue
-			}
-			if errObj.Message != expected {
-				t.Errorf("wrong error message. expected=%q, got=%q",
-					expected, errObj.Message)
 			}
 		}
 	}
