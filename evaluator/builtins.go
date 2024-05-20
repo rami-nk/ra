@@ -30,7 +30,7 @@ var builtins = map[string]*object.Builtin{
 
 			argument, ok := args[0].(*object.Array)
 			if !ok {
-				return newError("argument to `len` not supported. got=%s, want=%s.",
+				return newError("argument to `first` not supported. got=%s, want=%s.",
 					args[0].Type(), object.ARRAY_OBJ)
 			}
 
@@ -50,7 +50,7 @@ var builtins = map[string]*object.Builtin{
 
 			argument, ok := args[0].(*object.Array)
 			if !ok {
-				return newError("argument to `len` not supported. got=%s, want=%s.",
+				return newError("argument to `last` not supported. got=%s, want=%s.",
 					args[0].Type(), object.ARRAY_OBJ)
 			}
 
@@ -70,7 +70,7 @@ var builtins = map[string]*object.Builtin{
 
 			argument, ok := args[0].(*object.Array)
 			if !ok {
-				return newError("argument to `len` not supported. got=%s, want=%s.",
+				return newError("argument to `rest` not supported. got=%s, want=%s.",
 					args[0].Type(), object.ARRAY_OBJ)
 			}
 
@@ -82,6 +82,28 @@ var builtins = map[string]*object.Builtin{
 			}
 
 			return NULL
+		},
+	},
+	"push": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2.",
+					len(args))
+			}
+
+			array, ok := args[0].(*object.Array)
+			if !ok {
+				return newError("argument to `push` not supported. got=%s, want=%s.",
+					args[0].Type(), object.ARRAY_OBJ)
+			}
+
+			length := len(array.Elements)
+
+			newElements := make([]object.Object, length+1, length+1)
+			copy(newElements, array.Elements)
+			newElements[length] = args[1]
+
+			return &object.Array{Elements: newElements}
 		},
 	},
 }
