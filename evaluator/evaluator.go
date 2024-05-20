@@ -172,9 +172,9 @@ func evaluateIndexExpression(left, index object.Object) object.Object {
 func evaluateArrayIndexExpression(array, index object.Object) object.Object {
 	arrayObject := array.(*object.Array)
 	idx := index.(*object.Integer).Value
-	max := int64(len(arrayObject.Elements) - 1)
+	maxIdx := int64(len(arrayObject.Elements) - 1)
 
-	if idx < 0 || idx > max {
+	if idx < 0 || idx > maxIdx {
 		return NULL
 	}
 
