@@ -188,12 +188,15 @@ func evaluateIfExpression(ie *ast.IfExpression, env *object.Environment) object.
 }
 
 func evaluateIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: " + node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
 
-	return val
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + node.Value)
 }
 
 func isTruthy(obj object.Object) bool {
@@ -286,21 +289,22 @@ func evalMinusOperatorExpression(right object.Object) object.Object {
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-	if !ok {
+	switch fn := fn.(type) {
+	case *object.Function:
+		if len(args) < len(fn.Parameters) {
+			return newError("Not enough arguments in call to function.")
+		}
+		if len(args) > len(fn.Parameters) {
+			return newError("Too many arguments in call to function.")
+		}
+		functionScope := extendFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, functionScope)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return fn.Fn(args...)
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	if len(args) < len(function.Parameters) {
-		return newError("Not enough arguments in call to function.")
-	}
-	if len(args) > len(function.Parameters) {
-		return newError("Too many arguments in call to function.")
-	}
-
-	functionScope := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, functionScope)
-	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
