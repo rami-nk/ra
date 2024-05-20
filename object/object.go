@@ -16,12 +16,24 @@ type Object interface {
 
 const (
 	NULL             = "Null"
+	STRING_OBJ       = "String"
 	INTEGER_OBJ      = "Integer"
 	BOOLEAN_OBJ      = "Boolean"
 	RETURN_VALUE_OBJ = "Return_value"
 	FUNCTION_OBJ     = "Function"
 	ERROR_OBJ        = "ERROR"
 )
+
+type String struct {
+	Value string
+}
+
+func (s *String) Inspect() string {
+	return fmt.Sprintf("%s", s.Value)
+}
+func (s *String) Type() ObjectType {
+	return STRING_OBJ
+}
 
 type Integer struct {
 	Value int64
