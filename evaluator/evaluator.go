@@ -185,6 +185,8 @@ func evaluateIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evaluateArrayIndexExpression(left, index)
+	case left.Type() == object.MAP_OBJ && index.Type() == object.STRING_OBJ:
+		return evaluateMapIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
@@ -200,6 +202,19 @@ func evaluateArrayIndexExpression(array, index object.Object) object.Object {
 	}
 
 	return arrayObject.Elements[idx]
+}
+
+func evaluateMapIndexExpression(mp object.Object, index object.Object) object.Object {
+	_map := mp.(*object.Map).Pairs
+	key := index.(*object.String).Value
+
+	value, ok := _map[key]
+
+	if !ok {
+		return NULL
+	}
+
+	return value
 }
 
 func evaluatePrefixExpression(operator string, right object.Object) object.Object {
