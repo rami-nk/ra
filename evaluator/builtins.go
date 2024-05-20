@@ -74,11 +74,14 @@ var builtins = map[string]*object.Builtin{
 					args[0].Type(), object.ARRAY_OBJ)
 			}
 
-			if len(argument.Elements) <= 1 {
-				return NULL
+			length := len(argument.Elements)
+			if length > 0 {
+				newElements := make([]object.Object, length-1)
+				copy(newElements, argument.Elements[1:length])
+				return &object.Array{Elements: newElements}
 			}
 
-			return &object.Array{Elements: argument.Elements[1:]}
+			return NULL
 		},
 	},
 }
