@@ -353,40 +353,26 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 		Elements: p.parseExpressionList(token.RBRACKET),
 	}
 }
-
 func (p *Parser) parseMapLiteral() ast.Expression {
 	mapLiteral := &ast.MapLiteral{Token: p.curToken}
-	mapLiteral.Map = map[string]ast.Expression{}
+	mapLiteral.Pairs = make(map[ast.Expression]ast.Expression)
 
-	if p.peekTokenIs(token.RBRACE) {
+	for !p.peekTokenIs(token.RBRACE) {
 		p.nextToken()
-		return mapLiteral
-	}
-
-	p.nextToken()
-
-	key := p.curToken.Literal
-
-	if !p.expectPeekTokenAndAdvance(token.COLON) {
-		p.nextToken()
-		return nil
-	}
-
-	p.nextToken()
-	mapLiteral.Map[key] = p.parseExpression(LOWEST)
-
-	for p.peekTokenIs(token.COMMA) {
-		p.nextToken()
-		p.nextToken()
-		key := p.curToken.Literal
+		key := p.parseExpression(LOWEST)
 
 		if !p.expectPeekTokenAndAdvance(token.COLON) {
-			p.nextToken()
 			return nil
 		}
 
 		p.nextToken()
-		mapLiteral.Map[key] = p.parseExpression(LOWEST)
+		value := p.parseExpression(LOWEST)
+
+		mapLiteral.Pairs[key] = value
+
+		if !p.peekTokenIs(token.RBRACE) && !p.expectPeekTokenAndAdvance(token.COMMA) {
+			return nil
+		}
 	}
 
 	if !p.expectPeekTokenAndAdvance(token.RBRACE) {

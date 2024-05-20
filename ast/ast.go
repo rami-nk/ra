@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"fmt"
 	"ra/token"
 	"strings"
 )
@@ -343,7 +342,7 @@ func (ce *CallExpression) String() string {
 
 type MapLiteral struct {
 	Token token.Token // the '{' token
-	Map   map[string]Expression
+	Pairs map[Expression]Expression
 }
 
 func (ml *MapLiteral) expressionNode()      {}
@@ -351,14 +350,14 @@ func (ml *MapLiteral) TokenLiteral() string { return ml.Token.Literal }
 func (ml *MapLiteral) String() string {
 	var out bytes.Buffer
 
-	var pairs []string
-	for key, value := range ml.Map {
-		pairs = append(pairs, fmt.Sprintf("\"%s\": %s", key, value.String()))
+	pairs := []string{}
+	for key, value := range ml.Pairs {
+		pairs = append(pairs, key.String()+":"+value.String())
 	}
 
-	out.WriteString("{ ")
-	out.WriteString(strings.Join(pairs, " ,"))
-	out.WriteString(" }")
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
 
 	return out.String()
 }

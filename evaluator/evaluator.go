@@ -68,11 +68,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Array{Elements: elements}
 
 	case *ast.MapLiteral:
-		pairs := make(map[string]object.Object)
-		for key, value := range node.Map {
-			pairs[key] = Eval(value, env)
-		}
-		return &object.Map{Pairs: pairs}
+		return evaluateMapLiteral(node, env)
 
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
@@ -185,7 +181,7 @@ func evaluateIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evaluateArrayIndexExpression(left, index)
-	case left.Type() == object.MAP_OBJ && index.Type() == object.STRING_OBJ:
+	case left.Type() == object.MAP_OBJ:
 		return evaluateMapIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
@@ -205,16 +201,20 @@ func evaluateArrayIndexExpression(array, index object.Object) object.Object {
 }
 
 func evaluateMapIndexExpression(mp object.Object, index object.Object) object.Object {
-	_map := mp.(*object.Map).Pairs
-	key := index.(*object.String).Value
+	mapObject := mp.(*object.Map).Pairs
 
-	value, ok := _map[key]
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	value, ok := mapObject[key.HashKey()]
 
 	if !ok {
 		return NULL
 	}
 
-	return value
+	return value.Value
 }
 
 func evaluatePrefixExpression(operator string, right object.Object) object.Object {
@@ -395,6 +395,32 @@ func unwrapReturnValue(obj object.Object) object.Object {
 		return returnValue.Value
 	}
 	return obj
+}
+
+func evaluateMapLiteral(node *ast.MapLiteral, env *object.Environment) object.Object {
+	pairs := make(map[object.HashKey]object.MapPair)
+
+	for keyNode, valueNode := range node.Pairs {
+		key := Eval(keyNode, env)
+		if isError(key) {
+			return key
+		}
+
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return newError("unusable as hash key: %s", key.Type())
+		}
+
+		value := Eval(valueNode, env)
+		if isError(value) {
+			return value
+		}
+
+		hashed := hashKey.HashKey()
+		pairs[hashed] = object.MapPair{Key: key, Value: value}
+	}
+
+	return &object.Map{Pairs: pairs}
 }
 
 func newError(format string, a ...interface{}) *object.Error {
