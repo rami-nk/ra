@@ -18,26 +18,31 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	// Statements
 	case *ast.Program:
 		return evaluateProgram(node.Statements, env)
+
 	case *ast.BlockStatement:
 		return evaluateStatements(node.Statements, env)
+
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
+
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
 		if isError(val) {
 			return val
 		}
 		env.Set(node.Name.String(), val)
+
 	case *ast.ExpressionStatement:
 		val := Eval(node.Expression, env)
 		if isError(val) {
 			return val
 		}
 		return val
+
 	case *ast.FunctionLiteral:
 		return &object.Function{
 			Parameters: node.Parameters,
@@ -48,16 +53,27 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	// Expressions
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
+
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
+
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
+
 	case *ast.ArrayLiteral:
 		elements := evaluateExpressions(node.Elements, env)
 		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
+
+	case *ast.MapLiteral:
+		pairs := make(map[string]object.Object)
+		for key, value := range node.Map {
+			pairs[key] = Eval(value, env)
+		}
+		return &object.Map{Pairs: pairs}
+
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
 		if isError(left) {
@@ -68,12 +84,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return index
 		}
 		return evaluateIndexExpression(left, index)
+
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
 		return evaluatePrefixExpression(node.Operator, right)
+
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
 		if isError(left) {
@@ -85,10 +103,13 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return right
 		}
 		return evaluateInfixExpression(left, node.Operator, right)
+
 	case *ast.IfExpression:
 		return evaluateIfExpression(node, env)
+
 	case *ast.Identifier:
 		return evaluateIdentifier(node, env)
+
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if isError(function) {

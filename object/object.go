@@ -20,9 +20,10 @@ const (
 	STRING_OBJ       = "String"
 	INTEGER_OBJ      = "Integer"
 	BOOLEAN_OBJ      = "Boolean"
-	RETURN_VALUE_OBJ = "Return_value"
+	RETURN_VALUE_OBJ = "ReturnValue"
 	FUNCTION_OBJ     = "Function"
-	BUILTIN_OBJ      = "BUILTIN"
+	BUILTIN_OBJ      = "Builtin"
+	MAP_OBJ          = "Map"
 	ERROR_OBJ        = "ERROR"
 )
 
@@ -136,4 +137,24 @@ type Builtin struct {
 }
 
 func (f *Builtin) Type() ObjectType { return BUILTIN_OBJ }
-func (f *Builtin) Inspect() string  { return "<builtin function>" }
+func (f *Builtin) Inspect() string  { return "<builtin-function>" }
+
+type Map struct {
+	Pairs map[string]Object
+}
+
+func (m *Map) Type() ObjectType { return MAP_OBJ }
+func (m *Map) Inspect() string {
+	var out bytes.Buffer
+
+	var pairs []string
+	for key, value := range m.Pairs {
+		pairs = append(pairs, fmt.Sprintf("\"%s\": %s", key, value.Inspect()))
+	}
+
+	out.WriteString("{ ")
+	out.WriteString(strings.Join(pairs, " ,"))
+	out.WriteString(" }")
+
+	return out.String()
+}
