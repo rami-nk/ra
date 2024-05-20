@@ -353,6 +353,11 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`last([])`, "null"},
 		{`last(1)`, "argument to `len` not supported. got=Integer, want=Array."},
 		{`last("String")`, "argument to `len` not supported. got=String, want=Array."},
+		{`rest([1, 2, 3])`, "[2, 3]"},
+		{`rest([])`, "null"},
+		{`rest(1)`, "argument to `len` not supported. got=Integer, want=Array."},
+		{`rest("String")`, "argument to `len` not supported. got=String, want=Array."},
+		{`rest(rest([1, 2, 3]))`, "[3]"},
 	}
 
 	for _, tt := range tests {
@@ -376,6 +381,11 @@ func TestBuiltinFunctions(t *testing.T) {
 			case *object.Null:
 				if obj.Inspect() != expected {
 					t.Errorf("not null returned.")
+				}
+			case *object.Array:
+				if obj.Inspect() != expected {
+					t.Errorf("wrong array returned. expected=%s, got=%s",
+						expected, obj.Inspect())
 				}
 			default:
 				t.Errorf("object is not Error. got=%T (%+v)",
