@@ -10,13 +10,15 @@ var builtins = map[string]*object.Builtin{
 					len(args))
 			}
 
-			argument, ok := args[0].(*object.String)
-			if !ok {
-				return newError("argument to `len` not supported. got=%s, want=%s.",
-					args[0].Type(), object.STRING_OBJ)
+			switch argument := args[0].(type) {
+			case *object.String:
+				return &object.Integer{Value: int64(len(argument.Value))}
+			case *object.Array:
+				return &object.Integer{Value: int64(len(argument.Elements))}
+			default:
+				return newError("argument to `len` not supported. got=%s, want={%s or %s}.",
+					args[0].Type(), object.STRING_OBJ, object.ARRAY_OBJ)
 			}
-
-			return &object.Integer{Value: int64(len(argument.Value))}
 		},
 	},
 }
