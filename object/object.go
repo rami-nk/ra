@@ -16,6 +16,7 @@ type Object interface {
 
 const (
 	NULL             = "Null"
+	ARRAY_OBJ        = "Array"
 	STRING_OBJ       = "String"
 	INTEGER_OBJ      = "Integer"
 	BOOLEAN_OBJ      = "Boolean"
@@ -58,10 +59,32 @@ func (i *Boolean) Type() ObjectType {
 	return BOOLEAN_OBJ
 }
 
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Type() ObjectType {
+	return ARRAY_OBJ
+}
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	var elements []string
+	for _, element := range a.Elements {
+		elements = append(elements, element.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
 type Null struct{}
 
 func (i *Null) Inspect() string {
-	return fmt.Sprintf("%s", "null")
+	return "null"
 }
 func (i *Null) Type() ObjectType {
 	return NULL
