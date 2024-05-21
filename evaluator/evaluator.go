@@ -117,6 +117,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 		return applyFunction(function, args)
+
+	case *ast.ForLoopExpression:
+		return evaluateForLoopExpression(node, env)
 	}
 
 	return nil
@@ -421,6 +424,32 @@ func evaluateMapLiteral(node *ast.MapLiteral, env *object.Environment) object.Ob
 	}
 
 	return &object.Map{Pairs: pairs}
+}
+
+func evaluateForLoopExpression(node *ast.ForLoopExpression, env *object.Environment) object.Object {
+	array := Eval(node.Iterable, env).(*object.Array)
+
+	if isError(array) {
+		return array
+	}
+
+	forLoopScope := object.NewEnclosedEnvironment(env)
+
+	var result object.Object
+	for idx := range len(array.Elements) {
+		forLoopScope.Set(node.Iterator.Value, array.Elements[idx])
+		result = Eval(node.Body, forLoopScope)
+
+		if isError(result) {
+			return result
+		}
+
+		if result.Type() == object.RETURN_VALUE_OBJ {
+			return result
+		}
+	}
+
+	return result
 }
 
 func newError(format string, a ...interface{}) *object.Error {

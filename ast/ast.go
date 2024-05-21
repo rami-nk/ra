@@ -361,3 +361,21 @@ func (ml *MapLiteral) String() string {
 
 	return out.String()
 }
+
+type ForLoopExpression struct {
+	Token    token.Token // the 'for' token
+	Iterator *Identifier
+	Iterable Expression
+	Body     *BlockStatement
+}
+
+func (le *ForLoopExpression) expressionNode()      {}
+func (le *ForLoopExpression) TokenLiteral() string { return le.Token.Literal }
+func (le *ForLoopExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("for element in <array> {\n")
+	out.WriteString(le.Body.String())
+
+	return out.String()
+}
